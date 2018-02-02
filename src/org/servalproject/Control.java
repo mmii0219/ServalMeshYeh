@@ -28,6 +28,7 @@ import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
 import android.os.AsyncTask;
+import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -64,6 +65,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.servalproject.Control.Initial;
+import org.servalproject.Control.RoleFlag;
+import org.servalproject.Control.StateFlag;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.servald.IPeer;
 import org.servalproject.servaldna.ServalDCommand;
@@ -113,7 +117,6 @@ public class Control extends Service {
     private String GOpasswd = null;
     private String WiFiApName = null;
     private String Cluster_Name = null;
-    private String Internet_Accessibility = null;
 
     private ConnectivityManager mConnectivityManager = null;
     private NetworkInfo mNetworkInfo = null;
@@ -140,7 +143,7 @@ public class Control extends Service {
 
 
     public enum StateFlag {
-        NOCONNECTION(0), GO_FORMATION(2), DETECTGAW(1), ADD_SERVICE(3), DISCOVERY_SERVICE(4), REMOVE_GROUP(5), WIFI_CONNECT(6), WAITING(7);
+        GO_INITIAL(0), ADD_SERVICE(1), DISCOVERY_SERVICE(2), GO_FORMATION(3), MULTI_CONNECT(4),WAITING(5);
         private int index;
 
         StateFlag(int idx) {
@@ -178,6 +181,11 @@ public class Control extends Service {
         }
     }
 
+//Miga
+	private int power_level = 0;
+	private String GO_mac;
+	private Thread initial = null;
+	
     // </aqua0722>
     public void onNetworkStateChanged() {
         if (serviceRunning) {
@@ -362,10 +370,10 @@ public class Control extends Service {
 
         public void run() {
             try {
+            	/*
                 String SSID = record.get("SSID").toString();
                 String key = record.get("PWD").toString();
                 String Name = record.get("Name").toString();
-                String In_ac = record.get("In_ac").toString();
                 String PEER = record.get("PEER").toString();
                 //s_status = Long.toString((Calendar.getInstance().getTimeInMillis() - start_time ) / 1000) + "s/ " + sleep_time + "s, round: " + NumRound + ", State: choosing peer, step 1";
                 s_status = "State: choosing peer";
@@ -375,10 +383,7 @@ public class Control extends Service {
                     if (Newcompare(Name, Cluster_Name) == 0) {
                         return;
                     }
-                    if (Newcompare(In_ac, "inter") != 0 && Newcompare(Internet_Accessibility, "inter") == 0) {
-                        return;
-                    } else if ((Newcompare(In_ac, "inter") != 0 && Newcompare(Internet_Accessibility, "inter") != 0)
-                            || (Newcompare(In_ac, "inter") == 0 && Newcompare(Internet_Accessibility, "inter") == 0)) {
+      
                         int peercount = count_peer();
                         if (Integer.valueOf(PEER) < peercount) {
                             return;
@@ -387,7 +392,7 @@ public class Control extends Service {
                                 return;
                             }
                         }
-                    }
+                    
                     Log.d("Leaf0419", "State: choosing peer, step 3");
                     STATE = StateFlag.REMOVE_GROUP.getIndex();
                     try {
@@ -446,7 +451,6 @@ public class Control extends Service {
                                 if (mNetworkInfo.isConnected() == true) {
                                     // renew service record information
                                     Cluster_Name = Name;
-                                    Internet_Accessibility = In_ac;
                                     if (manager != null) {
                                         manager.removeGroup(channel, null);
                                     }
@@ -510,6 +514,7 @@ public class Control extends Service {
                         e.printStackTrace();
                     }
                 }
+           */
             } catch (Exception e) {
                 STATE = StateFlag.ADD_SERVICE.getIndex();
                 e.printStackTrace();
@@ -533,7 +538,7 @@ public class Control extends Service {
                         total_time = total_time + (Calendar.getInstance().getTimeInMillis() - start_time) / 1000;
                         //s_status = Long.toString((Calendar.getInstance().getTimeInMillis() - start_time ) / 1000) + "s/ " + sleep_time + "s, round: " + NumRound + ", State: advertising service, receive frame";
                         s_status = "State: advertising service, receive frame";
-                        Log.d("Leaf0419", "State: advertising service, receive frame");
+                        Log.d("Miga", "State: advertising service, receive frame");
                         record = re_record;
                         if (t_wifi_connect != null) {
                             if (t_wifi_connect.isAlive()) {
@@ -566,40 +571,30 @@ public class Control extends Service {
         if (Cluster_Name == null) {
             Cluster_Name = WiFiApName;
         }
-        if (Internet_Accessibility == null) {
-            Internet_Accessibility = "intra";
-        }
+        
         // Leaf 0616
+        /*
         if (mConnectivityManager != null) {
             mNetworkInfo = mConnectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
             if (mNetworkInfo != null) {
                 if (mNetworkInfo.isConnected() == false) {
                     Cluster_Name = WiFiApName;
-                    Internet_Accessibility = "intra";
                 } else {
-                    WifiInfo wifiInfo = wifi.getConnectionInfo();
-                    String temp = "\"" + WMNETAP + "\"";
-                    if (Newcompare(wifiInfo.getSSID().toString(), temp) == 0) {
-                        Internet_Accessibility = "inter";
-                        Cluster_Name = WiFiApName;
-                    } else {
-                        if (peerCount <= 0) {
-                            Cluster_Name = WiFiApName;
-                            Internet_Accessibility = "intra";
-                        }
-                    }
+                    Cluster_Name = WiFiApName;
                 }
             }
-        }
+        }*/
         record_re.put("Name", Cluster_Name);
         record_re.put("SSID", WiFiApName);
         record_re.put("PWD", GOpasswd);
-        record_re.put("In_ac", Internet_Accessibility);
         record_re.put("PEER", String.valueOf(peercount));
-        total_time = total_time + (Calendar.getInstance().getTimeInMillis() - start_time) / 1000;
+        //Miga
+        //power level 一定要轉成 string
+     	record_re.put("POWER", Integer.toString(power_level));
+       // total_time = total_time + (Calendar.getInstance().getTimeInMillis() - start_time) / 1000;
         //s_status = Long.toString((Calendar.getInstance().getTimeInMillis() - start_time ) / 1000) + "s/ " + sleep_time + "s, round: " + NumRound + ", State: advertising service with " + record_re.toString();
         s_status = "State: advertising service with " + record_re.toString();
-        Log.d("Leaf0419", "State: advertising service with " + record_re.toString());
+        Log.d("Miga", "State: advertising service with " + record_re.toString());
         serviceInfo = WifiP2pDnsSdServiceInfo.newInstance("Wi-Fi_Info", "_presence._tcp", record_re);
         manager.clearLocalServices(channel, new WifiP2pManager.ActionListener() {
             @Override
@@ -609,13 +604,13 @@ public class Control extends Service {
                             @Override
                             public void onSuccess() {
                                 // service broadcasting started
-                                Log.d("Leaf0419", "State: advertising service, addLocalService onSuccess");
+                                Log.d("Miga", "State: advertising service, addLocalService onSuccess");
                                 STATE = StateFlag.DISCOVERY_SERVICE.getIndex();
                             }
 
                             @Override
                             public void onFailure(int error) {
-                                Log.d("Leaf0419", "State: advertising service, addLocalService onFailure");
+                                Log.d("Miga", "State: advertising service, addLocalService onFailure");
                                 STATE = StateFlag.ADD_SERVICE.getIndex();
                             }
                         });
@@ -623,7 +618,7 @@ public class Control extends Service {
 
             @Override
             public void onFailure(int error) {
-                Log.d("Leaf0419", "State: advertising service, clearLocalServices onFailure");
+                Log.d("Miga", "State: advertising service, clearLocalServices onFailure");
                 STATE = StateFlag.ADD_SERVICE.getIndex();
             }
         });
@@ -640,7 +635,16 @@ public class Control extends Service {
                 try {
                     Thread.sleep(1000);
                     if (Auto) {
-                        Log.d("Leaf0419", "STATE: " + STATE);
+                    	 if (STATE == StateFlag.ADD_SERVICE.getIndex()) {
+                    		 s_status = "State: advertising service";
+                             Log.d("Miga", "State: advertising service");
+                            
+                             STATE = StateFlag.WAITING.getIndex();
+                             startRegistration();
+                             discoverService();
+
+                         }
+                       /* Log.d("Leaf0419", "STATE: " + STATE);
                         if (STATE >= StateFlag.REMOVE_GROUP.getIndex()) continue;
 
                         // Leaf0616
@@ -833,14 +837,14 @@ public class Control extends Service {
                             sleep_time = sleep_time + 15;
                             if (STATE == StateFlag.DETECTGAW.getIndex()) {
                                 STATE = StateFlag.ADD_SERVICE.getIndex();
-                                /*wifi.setWifiEnabled(false);
+                                wifi.setWifiEnabled(false);
                                 Thread.sleep(500);
                                 wifi.setWifiEnabled(true);
-                                Thread.sleep(1000);*/
+                                Thread.sleep(1000);
                             } else if (STATE == StateFlag.DISCOVERY_SERVICE.getIndex()) {
                                 STATE = StateFlag.ADD_SERVICE.getIndex();
                             }
-                        }
+                        }*/
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -1148,9 +1152,70 @@ public class Control extends Service {
         sleep_time = 0;
         total_time = 0;
         start_time = Calendar.getInstance().getTimeInMillis();
-
+        
+        //Miga
+        this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        // Get Go Info
+     	if (initial == null) {
+     		initial = new Initial();
+     		initial.start();
+     	}
+     	
     }
-
+    //Miga for power
+    private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context ctxt, Intent intent) {
+			int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
+			power_level = level;
+		}
+	};
+	//Miga for device initial create
+	public class  Initial extends Thread{
+		public void run() {
+			manager.createGroup(channel, new WifiP2pManager.ActionListener() {
+					@Override
+					public void onSuccess() {
+						Log.d("Miga", "initial createGroup Success");
+						//Isconnect = true;
+					}
+					@Override
+					public void onFailure(int error) {
+						Log.d("Miga", "initial createGroup onFailure");
+					}
+				});
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			manager.requestGroupInfo(channel, new WifiP2pManager.GroupInfoListener() {
+				@Override
+				public void onGroupInfoAvailable(WifiP2pGroup group) {
+					if (group != null) {
+							GOpasswd = group.getPassphrase();
+							WiFiApName = group.getNetworkName();
+							Cluster_Name = WiFiApName;
+							GO_mac = group.getOwner().deviceAddress.toString();
+							STATE = StateFlag.ADD_SERVICE.getIndex();//1
+							Log.d("Miga", "State: Initial Complete , SSID : " + WiFiApName + " Cluster_Name : " + Cluster_Name);
+					}
+				}
+			});
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}	
+			Log.d("Miga", "Initial group success!");
+			//updatePeerCount(peerCount);
+			//s_status = "State: Initial Complete : time : " +( (Calendar.getInstance().getTimeInMillis() - initial_start_time)/1000 + " SSID : " + WiFiApName + " Cluster_Name : " + Cluster_Name)+
+			//		" ROLE : " + ROLE + " IPTABLE " + IPTable;
+			s_status = "State: Initial Complete : " + " SSID : " + WiFiApName + " Cluster_Name : " + Cluster_Name ;
+			
+		  }
+	}
     @Override
     public void onDestroy() {
         Log.d("Leaf1110", "Control Services Destroy");
@@ -1237,10 +1302,10 @@ public class Control extends Service {
             t_reconnection_wifiAp = new Reconnection_wifiAp();
             t_reconnection_wifiAp.start();
         }
-        if (t_collectIP == null) {
+       /* if (t_collectIP == null) {
             t_collectIP = new CollectIP_server();
             t_collectIP.start();
-        }
+        }*/
         // Following two threads is for counting peers by our module,
         // since Serval Mesh has already supported a similar function,
         // you can decide whether utilized following code
@@ -1256,7 +1321,7 @@ public class Control extends Service {
         // </aqua0722>
         new Task().execute(State.On);
         serviceRunning = true;
-        STATE = StateFlag.DETECTGAW.getIndex();
+        //STATE = StateFlag.WAITING.getIndex();
         return START_STICKY;
     }
 
