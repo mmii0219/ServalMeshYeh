@@ -628,7 +628,6 @@ public class Control extends Service {
             }
         });
     }
-
     // Leaf1105
     public class Reconnection_wifiAp extends Thread {
         ServerSocket GO_serversocket, Client_sersocket;
@@ -881,186 +880,6 @@ public class Control extends Service {
         }
     }
 
-    // <aqua0722>
-    public class NativeCall extends Thread {
-        private byte[] buffer = new byte[256];
-        String SSID_Time_info;
-        String ip;
-        WifiInfo wifiInfo;
-        private NetworkInfo nativeInfo;
-        private long currentTime;
-
-        public void run() {
-            try {
-                Localserver = new LocalServerSocket("wifi.ap.info");
-                while (isRunning) {
-                    Localreceiver = Localserver.accept();
-                    if (Localreceiver != null) {
-                        //Log.d("Leaf0324", "Control, get wifiinfo: Localreceiver != null" );
-                        nativeInfo = mConnectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-                        wifiInfo = wifi.getConnectionInfo();
-                        Localout = new BufferedOutputStream(Localreceiver.getOutputStream());
-                        if (wifiInfo != null) {
-                            SSID_Time_info = wifiInfo.getSSID();
-                        }
-                        if (nativeInfo != null) {
-                            if (!nativeInfo.isConnected()) {
-                                SSID_Time_info = "NoWiFi";
-                            }
-                        }
-                        if (wifiInfo == null || nativeInfo == null) {
-                            SSID_Time_info = "NoWiFi";
-                        }
-                        //Edit by aqua0711
-                        SSID_Time_info = String.valueOf(ROLE);
-                        SSID_Time_info = SSID_Time_info + "#";
-                        if (ROLE == RoleFlag.FOREIGN_DEVICE.getValue() && GDIPandFP != "") {
-                            SSID_Time_info = SSID_Time_info + GDIPandFP;
-                        }
-                        Log.d("aqua0711", "Control, get wifiinfo: " + SSID_Time_info);
-                        if (Localout != null) {
-                            Localout.write(SSID_Time_info.getBytes());
-                            Localout.flush();
-                            Localout.close();
-                        }
-                        Localreceiver.close();
-                    }
-                }
-            } catch (IOException e) {
-                Log.e(getClass().getName(), e.getMessage());
-            } finally {
-                try {
-                    if (Localout != null) {
-                        Localout.close();
-                    }
-                    if (Localreceiver != null) {
-                        Localreceiver.close();
-                    }
-                    if (Localserver != null) {
-                        Localserver.close();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    public class RegisterToServer extends Thread {
-        private Socket socket = null;
-        private int r;
-        private byte[] buffer = new byte[128];
-        String message, temp, SSID;
-        // Register server IP and portserve
-        String ip = "140.114.77.81";
-        int port = 9999;
-        int FP;
-        private NetworkInfo RegisterInfo;
-        private BufferedOutputStream out;
-        private BufferedInputStream in;
-        private WifiInfo wifiInfo;
-
-        public void run() {
-            while (isRunning) {
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                RegisterInfo = mConnectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-                wifiInfo = wifi.getConnectionInfo();
-                try {
-                    if (RegisterInfo == null || wifiInfo == null) continue;
-                    SSID = wifiInfo.getSSID();
-                    if (RegisterInfo.isConnected() && SSID.equals("\"WMNET\"")) {
-                        Log.d("aqua0711", "Gateway device");
-                        ROLE = RoleFlag.GATEWAY_CANDIDATE.getValue();
-                        socket = new Socket();
-                        if (socket != null) {
-                            socket.bind(null);
-                            socket.connect((new InetSocketAddress(ip, port)), 500);
-                            FP = getForwardingPort();
-                            Log.d("Leaf0324", "Control, register message");
-                            Log.d("aqua0711", String.valueOf(FP));
-                            out = new BufferedOutputStream(socket.getOutputStream());
-                            in = new BufferedInputStream(socket.getInputStream());
-                            message = "Rgs:" + FP;
-                            if (out != null) {
-                                out.write(message.getBytes());
-                                out.flush();
-                                Log.d("Leaf0324", "Control, register done");
-                                if (in != null) {
-                                    message = "";
-                                    while (true) {
-
-                                        r = in.read(buffer);
-                                        if (r == -1) break;
-                                        temp = new String(buffer, 0, r);
-                                        message = message.concat(temp);
-                                    }
-                                    Log.d("Leaf0324", "Control, receive: " + message);
-                                    in.close();
-                                    out.close();
-                                }
-                            }
-                            socket.close();
-                        }
-                    } else if (RegisterInfo.isConnected() && SSID.equals("\"WMNET-705\"")) {
-                        Log.d("aqua0711", "Foreign device");
-                        ROLE = RoleFlag.FOREIGN_DEVICE.getValue();
-                        socket = new Socket();
-                        if (socket != null) {
-                            socket.bind(null);
-                            socket.connect((new InetSocketAddress(ip, port)), 500);
-                            Log.d("Leaf0324", "Control, request message");
-                            out = new BufferedOutputStream(socket.getOutputStream());
-                            in = new BufferedInputStream(socket.getInputStream());
-                            message = "Req:";
-                            if (out != null) {
-                                out.write(message.getBytes());
-                                out.flush();
-                                Log.d("Leaf0324", "Control, register done");
-                                if (in != null) {
-                                    message = "";
-                                    while (true) {
-                                        r = in.read(buffer);
-                                        if (r == -1) break;
-                                        temp = new String(buffer, 0, r);
-                                        message = message.concat(temp);
-                                    }
-                                    Log.d("Leaf0324", "Control, receive: " + message);
-                                    in.close();
-                                    out.close();
-                                }
-                            }
-                            socket.close();
-                        }
-                        GDIPandFP = message + ";";
-                        Log.d("aqua0711", "GD IP and Port : " + GDIPandFP);
-
-
-                    } else {
-                        Log.d("aqua0711", "Normal device");
-                        ROLE = RoleFlag.MANET_DEVICE.getValue();
-                    }
-                } catch (IOException e) {
-                    Log.e(getClass().getName(), e.getMessage());
-                    GDIPandFP = "No GD;";
-                } finally {
-                    try {
-                        if (socket != null) {
-                            socket.close();
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-
-        }
-    }
-
     private String wifiIpAddress() {
         WifiManager wm = (WifiManager) getSystemService(WIFI_SERVICE);
         int ipAddress = wm.getConnectionInfo().getIpAddress();
@@ -1082,15 +901,6 @@ public class Control extends Service {
 
         return ipAddressString;
     }
-
-    private int getForwardingPort() {
-        String wlan0ip = wifiIpAddress();
-        int lastDot = wlan0ip.lastIndexOf('.');
-        int RightMostInt = Integer.valueOf(wlan0ip.substring(lastDot + 1));
-        //Log.d("aqua0720", "IP rightest: "+RightMostInt);
-        return RightMostInt + 10000;
-    }
-    // </aqua0722>
 
     // EditLeaf 0727
     public class CollectIP_server extends Thread {
@@ -1442,15 +1252,7 @@ public class Control extends Service {
             t_receive_peer_count = new Receive_peer_count();
             t_receive_peer_count.start();
         }*/
-        // <aqua0722>
-        if (t_native == null) {
-            t_native = new NativeCall();
-            t_native.start();
-        }
-        if (t_register == null) {
-            t_register = new RegisterToServer();
-            t_register.start();
-        }
+
         // </aqua0722>
         new Task().execute(State.On);
         serviceRunning = true;
