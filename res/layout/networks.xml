@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Header -->
+
+    <include
+        android:id="@+id/headerLayout"
+        layout="@layout/header_layout" />
+
+    <!-- Body -->
+    <CheckBox
+        android:id="@+id/enabled"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/logot_image"
+        android:layout_toLeftOf="@+id/serval_status"
+        android:text="Enable Services" />
+
+    <TextView
+        android:id="@+id/serval_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/enabled"
+        android:layout_alignParentRight="true"
+        android:text="Off" />
+
+    <ListView
+        android:id="@+id/listView"
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/enabled"
+        android:divider="#303030"
+        android:dividerHeight="1dp"></ListView>
+    <ScrollView
+        android:layout_alignParentBottom="true"
+        android:layout_width="fill_parent"
+        android:layout_height="230dp"
+        android:id="@+id/scroll"
+        >
+    <TextView
+         android:id="@+id/process"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:layout_alignParentBottom="true"
+         android:singleLine="false"
+         android:textSize="12sp"
+         android:textAppearance="?android:attr/textAppearanceLarge"></TextView>
+    </ScrollView>
+ </RelativeLayout>

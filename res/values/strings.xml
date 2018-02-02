@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (C) 2011,2012 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU
+  General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+  <!-- @author Romana Challans <romana@servalproject.org> -->
+  
+<resources>
+
+     <!-- Serval General -->
+    <string name="header">Serval Project</string>
+    <string name="logoid">Serval Project Logo</string>
+    <string name="url">servalproject.org</string>
+    <string name="warning1">EXPERIMENTAL</string>
+    <string name="warning2">SOFTWARE</string>
+	<string name="app_name">Serval Mesh</string>
+	<string name="agree">I agree</string>
+	<string name="cancel">Cancel</string>
+	
+	<!-- Serval Main -->
+	<!-- These must say Serval Mesh, not Serval Network, because Serval provides the protocol, not the infrastructure.
+	This has important implications for telecommunications law in various countries. -->
+	<string name="callLabel">Call</string>    
+    <string name="messageLabel">Messages</string>    
+    <string name="contactsLabel">Contacts</string>    
+    <string name="mapsLabel">Maps</string>    
+    <string name="sharingLabel">Share Files</string>    
+    <string name="servalLabel">Share Us</string>    
+    <string name="settingsLabel">Settings</string>  
+    <string name="powerLabel">Power</string>    
+    <string name="helpLabel">Help</string>	
+    <string name="state_power_on">Connect</string>
+    <string name="state_power_off">Connect</string>
+    <string name="state_installing">Installing&#8230;</string>
+    <string name="state_upgrading">Upgrading&#8230;</string>
+    <string name="state_starting">Connect</string>
+    <string name="state_stopping">Connect</string>
+    <string name="state_broken">Broken!</string>
+
+	
+	<!-- Serval Buttons -->
+	<string name="btnwizard">SETUP WIZARD</string>
+	<string name="btnPhOk">OK</string>
+	
+	<!-- Serval Phone Set -->
+	<string name="cancelcall">Cancel</string>
+	<string name="searchpeers">Search</string>
+    <string name="searchingpeers">Searching...</string>
+    <string name="callcellular">Call via cellular network</string>
+
+    <!-- Serval General -->
+    <string name="setphone">Enter Phone No.</string>
+    <string name="setname">Display Name.</string>
+    <string name="statusstar">Status Indicator</string>
+    
+	<!-- Serval About -->
+	<string name="aboutTitle">About</string>	
+	<string name="emailEnquiries">enquiry@servalproject.org</string>  
+    
+	<!-- Serval Donations -->
+	<string name="donateTitle">Make a Donation</string>	
+	<string name="donateButton">Donate via PayPal</string>	
+	  
+    <!-- Serval Instruction -->
+    <string name="setdetails">Set Name and Number</string>
+    <string name="phoneInstr">Please enter your phone number.\nIt cannot match an emergency number, \nand must be at least 5 digits long.</string>
+	      
+	<!-- Serval Security -->
+    <string name="security_header">Serval Security</string>
+    	
+	<!-- Serval Maps -->
+	<string name="mapInfo">You do not currently have Serval Maps installed. 
+	    \n\nServal Maps is currently under development and it will be coming to the 
+	    Android Marketplace soon. 
+	    \n\nFor more information please visit the Serval Maps web site 
+	    \nhttp://developer.servalproject.org/wiki
+	    \nIn the meantime, if you have any queries, 
+	    \nplease contact us at \n\n</string>
+
+	<string name="broadcast_meshms_message">Broadcast messages are sent to the whole network.</string>
+
+
+	<!--  Wifi setup / warnings -->
+	<string name="openhotspottitle">Portable Wi-Fi hotspot</string>
+	<string name="openhotspotmessage">Starting an open hotspot will allow other users to consume your cellular data and may cost you money.</string>
+	<string name="adhoctesttitle">HERE BE DRAGONS!</string>
+    <string name="adhoctestmessage">Connecting to an Ad Hoc Wi-Fi network is not supported by Android. Doing this requires root permission, is unlikely to work and has the potential to damage your device and void your warranty.</string>
+	<string name="testbutton">Test</string>
+	<string name="adhocconnecttitle">Ad Hoc Wi-Fi</string>
+	<string name="adhocconnectmessage">Channel: %2$d\nAddress: %3$s</string>
+	<string name="connectbutton">Connect</string>
+	<string name="settingsbutton">Settings</string>
+
+    <plurals name="peers_label">
+        <item quantity="one">%d Peer</item>
+        <item quantity="other">%d Peers</item>
+    </plurals>
+    <string name="server_off">Off</string>
+    <string name="server_starting">Starting</string>
+    <string name="server_idle">Idle</string>
+    <string name="server_nopeers">No Peers</string>
+
+    <string name="connecting">Connecting...</string>
+    <string name="connecting_to">Connecting to %1$s...</string>
+    <string name="connected_to">Connected to %1$s.</string>
+    <string name="ssid_none">[Hidden network]</string>
+    <plurals name="open_networks">
+        <item quantity="one">%d open network.</item>
+        <item quantity="other">%d open networks.</item>
+    </plurals>
+    <plurals name="known_networks">
+        <item quantity="one">%d known network.</item>
+        <item quantity="other">%d known networks.</item>
+    </plurals>
+    <plurals name="serval_networks">
+        <item quantity="one">%d Serval network.</item>
+        <item quantity="other">%d Serval networks.</item>
+    </plurals>
+
+    <string name="wifi_client">Wi-Fi</string>
+    <string name="hotspot">Portable Wi-Fi hotspot</string>
+    <string name="adhoc">Ad Hoc Mesh</string>
+
+    <string name="meshms_delivered">delivered</string>
+    <string name="meshms_read">read</string>
+	
+	<!--  Wifi Direct -->
+    <string name="enable_p2p_button">P2P On/Off</string>
+    <string name="discover_peers_button">Discover</string>
+    <string name="connect_peer_button">Connect</string>
+    <string name="disconnect_peer_button">Disconnect</string>
+    <string name="get_file_button">Launch Gallery</string>
+    <string name="empty"></string>
+    <string name="yes">yes</string>
+    <string name="no">no</string>
+    <string name="client_text">This device will act as a client. Click on Gallery button to pick a local(stored) file</string>
+    <string name="empty_message">No devices found. Turn on P2P and perform discovery from the Action Bar</string>
+    <string name="p2p_off_warning">Enable P2P from action bar button above or system settings</string>
+    <string name="group_owner_text">"Am I the Group Owner? "</string>
+    <string name="label_me">ME</string>
+    <string name="label_peers">PEERS</string>
+    <string name="accessibilityconfig">D2DProjectEditByLeaf</string>
+    <string name="connectChinese1">連接</string>
+    <string name="connectChinese2">接受</string>
+    <string name="connectChinese3">連線</string>
+</resources>

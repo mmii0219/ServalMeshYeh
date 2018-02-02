@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (C) 2011 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+    <!-- Header -->
+    <include
+        android:id="@+id/headerLayout"
+        layout="@layout/header_layout"
+        />
+    <!-- Body -->
+    <TableLayout 
+        android:id="@+id/tableMain"   	
+        style="@style/smainTable"
+        >
+        <TableRow 
+            android:id="@+id/tableRhizomeHeader"
+            style="@style/srhizomeTableRow2"
+            > 
+            <TextView
+                android:id="@+id/rhizome_header"
+                style="@style/srhizome_header"
+                android:text="@string/rhizome_header"
+                />
+        </TableRow>	
+        <TableRow 
+            android:id="@+id/tableRhizome1"
+            style="@style/srhizomeTableRow2"
+            >
+            <Button 
+                android:id="@+id/rhizome_share"
+                style="@style/sbtnrhizome_span"
+                android:text="@string/share_button"
+                />
+          <!--   <Button
+                android:id="@+id/rhizome_sent"
+                style="@style/sbtnrhizome"
+                android:text="@string/sent_button"
+                /> -->
+        </TableRow> 
+        
+        <TableRow 
+            android:id="@+id/tableRhizome2"
+            style="@style/srhizomeTableRow"
+            > 
+            <Button 
+                android:id="@+id/rhizome_find"
+                style="@style/sbtnrhizome"
+                android:text="@string/find_button"
+                />
+            <Button 
+                android:id="@+id/rhizome_saved"
+                style="@style/sbtnrhizome"
+                android:text="@string/saved_button"
+                />
+        </TableRow>	
+        <TableRow 
+            android:id="@+id/tableRhizome3"
+            style="@style/srhizomeTableRow"
+            >
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="12dp"
+                android:layout_marginRight="12dp"
+                android:layout_marginTop="20dp"
+                android:layout_span="2"
+               	android:progressDrawable="@drawable/space_progress"
+                />
+        </TableRow>
+         <TableRow 
+            android:id="@+id/tableRhizome4"
+            style="@style/srhizomeTableRow2" >
+            
+            <TextView
+                android:id="@+id/progress_label"
+                style="@style/srhizome_text1"
+                android:text="@string/storage_settings" />
+            
+        </TableRow>	
+        
+        <TableRow 
+            android:id="@+id/tableRhizome5"
+            style="@style/srhizomeTableRow" >
+            <TextView 
+                style="@style/srhizome_text3"
+        		android:id="@+id/state" 
+        		/>
+    		<TextView 
+                style="@style/srhizome_text3"
+        		android:id="@+id/info" 
+        		/>
+    
+        </TableRow>	
+
+    </TableLayout>
+
+    <TextView
+            android:id="@+id/security_status"
+            style="@style/security_status"
+            android:text="@string/security_status" />
+          
+</RelativeLayout>
