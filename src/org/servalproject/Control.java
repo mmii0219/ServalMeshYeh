@@ -41,6 +41,7 @@ import android.widget.TextView;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -183,8 +184,10 @@ public class Control extends Service {
 
 //Miga
 	private int power_level = 0;
+	private int peercount, InfoChangeTime =0;
 	private String GO_mac;
 	private Thread initial = null;
+	private Map<String, Map> record_set = new HashMap<String, Map>();
 	
     // </aqua0722>
     public void onNetworkStateChanged() {
@@ -370,6 +373,18 @@ public class Control extends Service {
 
         public void run() {
             try {
+            	//Log.d("Miga", "Enter WiFi_Connect ");
+            	//record_set.clear();
+            	int collect_num = 10;
+				//String thisTimeMAC = record.get("MAC").toString();//record是對方的服務內容（在discovery Service時指定了record=re_record）
+				while (collect_num > 0) {
+					record_set.put(record.get("SSID").toString(), record);//將蒐集到的其他裝置的服務根據SSID存放個別的服務
+					Thread.sleep(100);
+					collect_num--;
+					//Log.d("Miga", " collect_num : " + collect_num);
+					Log.d("Miga", "Collect data and record size : " + record_set+record_set.size());
+				}
+				//Log.d("Miga", "Collect data and record size : " + record_set+record_set.size());
             	/*
                 String SSID = record.get("SSID").toString();
                 String key = record.get("PWD").toString();
@@ -542,14 +557,17 @@ public class Control extends Service {
                         record = re_record;
                         if (t_wifi_connect != null) {
                             if (t_wifi_connect.isAlive()) {
+                            	Log.d("Miga", " WiFi_Connect isAlive  ");
                                 return;
                             }
                         }
                         if (t_wifi_connect == null) {
+                        	Log.d("Miga", " WiFi_Connect start  ");
                             t_wifi_connect = new WiFi_Connect();
                             t_wifi_connect.start();
                         } else {
                             if (!t_wifi_connect.isAlive()) {
+                            	Log.d("Miga", " WiFi_Connect start  ");
                                 t_wifi_connect = new WiFi_Connect();
                                 t_wifi_connect.start();
                             }
@@ -561,8 +579,11 @@ public class Control extends Service {
     }
 
     private void startRegistration() {
+    	InfoChangeTime+=1;//加入新的資訊並交換過得次數
+    	Log.d("Miga", "InfoChangeTime"+InfoChangeTime);
         record_re = new HashMap();
-        int peercount = count_peer();
+        //int peercount = count_peer();
+        peercount=record_set.size();//蒐集到周遭的info,初始值為0
         try {
             peerCount = ServalDCommand.peerCount();
         } catch (ServalDFailureException e) {
@@ -635,90 +656,84 @@ public class Control extends Service {
                 try {
                     Thread.sleep(1000);
                     if (Auto) {
+                    	 //開啟discovery serivce的listener,來接收其他device的info
+                    	if(start_time == 0) {//OnCreate時將start_time=0;
+  							start_time = Calendar.getInstance().getTimeInMillis();
+  							sleep_time = 0;
+  							discoverService();
+  						 }
                     	 if (STATE == StateFlag.ADD_SERVICE.getIndex()) {
                     		 s_status = "State: advertising service";
                              Log.d("Miga", "State: advertising service");
-                            
                              STATE = StateFlag.WAITING.getIndex();
                              startRegistration();
-                             discoverService();
-
+                             //discoverService();
                          }
+                         if (STATE == StateFlag.DISCOVERY_SERVICE.getIndex()) {
+                             total_time = total_time + (Calendar.getInstance().getTimeInMillis() - start_time) / 1000;
+                             //s_status = Long.toString((Calendar.getInstance().getTimeInMillis() - start_time ) / 1000) + "s/ " + sleep_time + "s, round: " + NumRound + ", State: discovering service";
+                             s_status = "State: discovering service";
+                             Log.d("Miga", "State: discovering service");
+                             manager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener() {
+                                 @Override
+                                 public void onSuccess() {
+                                     //Log.d("Miga", "State: discovering service, stopPeerDiscovery onSuccess");
+                                     manager.removeServiceRequest(channel, serviceRequest,
+                                             new WifiP2pManager.ActionListener() {
+                                                 @Override
+                                                 public void onSuccess() {
+                                                     manager.addServiceRequest(channel, serviceRequest,
+                                                             new WifiP2pManager.ActionListener() {
+                                                                 @Override
+                                                                 public void onSuccess() {
+                                                                     manager.discoverServices(channel,
+                                                                             new WifiP2pManager.ActionListener() {
+                                                                                 @Override
+                                                                                 public void onSuccess() {
+                                                                                     //Log.d("Miga", "State: discovering service, discoverServices onSuccess");
+                                                                                 }
+
+                                                                                 @Override
+                                                                                 public void onFailure(int error) {
+                                                                                     Log.d("Miga", "State: discovering service, discoverServices onFailure " + error);
+                                                                                     manager.discoverPeers(channel, null);
+                                                                                     STATE = StateFlag.ADD_SERVICE.getIndex();
+                                                                                 }
+                                                                             });
+                                                                 }
+
+                                                                 @Override
+                                                                 public void onFailure(int error) {
+                                                                     Log.d("Miga", "State: discovering service, addServiceRequest onFailure ");
+                                                                     STATE = StateFlag.ADD_SERVICE.getIndex();
+                                                                 }
+                                                             });
+                                                 }
+
+                                                 @Override
+                                                 public void onFailure(int reason) {
+                                                     Log.d("Miga", "State: discovering service, removeServiceRequest onFailure");
+                                                     STATE = StateFlag.ADD_SERVICE.getIndex();
+                                                 }
+                                             });
+                                 }
+
+                                 @Override
+                                 public void onFailure(int reasonCode) {
+                                     Log.d("Miga", "State: discovering service, stopPeerDiscovery onFailure");
+                                     STATE = StateFlag.ADD_SERVICE.getIndex();
+                                 }
+                             });
+                             NumRound++;
+                             Thread.sleep(5000);
+                             sleep_time = sleep_time + 5;
+                             STATE = StateFlag.ADD_SERVICE.getIndex();
+                         }//End DISCOVERY_SERVICE
                        /* Log.d("Leaf0419", "STATE: " + STATE);
                         if (STATE >= StateFlag.REMOVE_GROUP.getIndex()) continue;
 
                         // Leaf0616
-                        if (STATE == StateFlag.DETECTGAW.getIndex()) {
-                            total_time = total_time + (Calendar.getInstance().getTimeInMillis() - start_time) / 1000;
-                            //s_status = Long.toString((Calendar.getInstance().getTimeInMillis() - start_time ) / 1000) + "s/ " + sleep_time + "s, round: " + NumRound + ", State: detecting gateway";
-                            s_status = "State: detecting gateway";
-                            Log.d("Leaf0419", "State: detecting gateway");
-                            wifi.startScan();
-                            sleep(5000);
-                            sleep_time = sleep_time + 5;
-                            for (can_I_connectAP = false; result_size >= 1; result_size--) {
-                                if (Newcompare(wifi_scan_results.get(result_size - 1).SSID.toString(), WMNETAP) == 0) {
-                                    can_I_connectAP = true;
-                                    break;
-                                }
-                            }
-                            if (can_I_connectAP == true) {
-                                if (mConnectivityManager != null) {
-                                    mNetworkInfo = mConnectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-                                    if (mNetworkInfo != null) {
-                                        if (mNetworkInfo.isConnected() == true) {
-                                            wifi.disconnect();
-                                            Thread.sleep(1000);
-                                        }
-                                    }
-                                }
-                                TryNum = 4;
 
-                                WifiConfiguration wc = new WifiConfiguration();
-                                String SSID = wifi_scan_results.get(result_size - 1).SSID.toString();
-                                total_time = total_time + (Calendar.getInstance().getTimeInMillis() - start_time) / 1000;
-                                //s_status = Long.toString((Calendar.getInstance().getTimeInMillis() - start_time ) / 1000) + "s/ " + sleep_time + "s, round: " + NumRound + ", State: detecting gateway, try to associate with" + ": SSID name: " + SSID + " , passwd: " + key;
-                                s_status = "State: detecting gateway, try to associate with" + ": SSID name: " + SSID + " , passwd: " + key;
-                                Log.d("Leaf0419", "State: detecting gateway, try to associate with" + ": SSID name: " + SSID + " , passwd: " + key);
-                                wc.SSID = "\"" + SSID + "\"";
-                                wc.preSharedKey = "\"" + key + "\"";
-                                wc.hiddenSSID = true;
-                                wc.status = WifiConfiguration.Status.ENABLED;
-                                wc.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-                                wc.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-                                wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
-                                wc.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
-                                wc.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
-                                wc.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
-
-                                int res = wifi.addNetwork(wc);
-                                boolean temp = wifi.enableNetwork(res, true);
-                                if (mConnectivityManager != null) {
-                                    mNetworkInfo = mConnectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-                                    if (mNetworkInfo != null) {
-                                        while (!mNetworkInfo.isConnected() && TryNum >= 0) {
-                                            //res = wifi.addNetwork(wc);
-                                            temp = wifi.enableNetwork(res, true);
-                                            Thread.sleep(5000);
-                                            sleep_time = sleep_time + 5;
-                                            TryNum--;
-                                            total_time = total_time + (Calendar.getInstance().getTimeInMillis() - start_time) / 1000;
-                                            //s_status = Long.toString((Calendar.getInstance().getTimeInMillis() - start_time ) / 1000) + "s/ " + sleep_time + "s, round: " + NumRound + ", State: associating GO, enable true:?" + temp +" remainder #attempt:"+ TryNum;
-                                            s_status = "State: associating GO, enable true:?" + temp + " remainder #attempt:" + TryNum;
-                                            Log.d("Leaf0419", "State: associating GO, enable true:?" + temp + " remainder #attempt:" + TryNum);
-                                            mNetworkInfo = mConnectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-                                        }
-                                    }
-                                }
-                            }
-                            total_time = total_time + (Calendar.getInstance().getTimeInMillis() - start_time) / 1000;
-                            //s_status = Long.toString((Calendar.getInstance().getTimeInMillis() - start_time ) / 1000) + "s/ " + sleep_time + "s, round: " + NumRound + ", State: detecting gateway done, can I connect to WMnet?: "+can_I_connectAP;
-                            s_status = "State: detecting gateway done, can I connect to WMnet?: " + can_I_connectAP;
-                            Log.d("Leaf0419", "State: detecting gateway done, can I connect to WMnet?: " + can_I_connectAP);
-                            if (Isconnect == true) {
-                                STATE = StateFlag.ADD_SERVICE.getIndex();
-                            }
-                        }
                         mNetworkInfo = mConnectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
                         if (pre_connect == true && mNetworkInfo.isConnected() == false) {
                             STATE = StateFlag.DETECTGAW.getIndex();
@@ -1151,15 +1166,21 @@ public class Control extends Service {
         NumRound = 1;
         sleep_time = 0;
         total_time = 0;
-        start_time = Calendar.getInstance().getTimeInMillis();
+        //start_time = Calendar.getInstance().getTimeInMillis();
         
         //Miga
+        start_time=0;
         this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         // Get Go Info
      	if (initial == null) {
      		initial = new Initial();
      		initial.start();
      	}
+     	//WriteLog.appendLog("Control.java/應用程式開啟");
+     	//WriteLog.appendLog("Control.java/應用程式開啟123456");
+     	
+     	//getBatteryCapacity();
+     	//Log.d("Miga", "record_set:"+record_set.size());
      	
     }
     //Miga for power
@@ -1170,7 +1191,27 @@ public class Control extends Service {
 			power_level = level;
 		}
 	};
-	//Miga for device initial create
+	//Miga 
+    public void getBatteryCapacity() {
+    	Object mPowerProfile_ = null;
+	    final String POWER_PROFILE_CLASS = "com.android.internal.os.PowerProfile";
+	    try {
+	        mPowerProfile_ = Class.forName(POWER_PROFILE_CLASS)
+	                .getConstructor(Context.class).newInstance(this);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    } 
+	    try {
+	        double batteryCapacity = (Double) Class
+	                .forName(POWER_PROFILE_CLASS)
+	                .getMethod("getAveragePower", java.lang.String.class)
+	                .invoke(mPowerProfile_, "battery.capacity");
+	       //s_status="batteryCapacity:"+batteryCapacity+"mAh";
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    } 
+}
+    //Miga for device initial create
 	public class  Initial extends Thread{
 		public void run() {
 			manager.createGroup(channel, new WifiP2pManager.ActionListener() {
@@ -1216,7 +1257,10 @@ public class Control extends Service {
 			
 		  }
 	}
-    @Override
+    
+	
+	
+	@Override
     public void onDestroy() {
         Log.d("Leaf1110", "Control Services Destroy");
         new Task().execute(State.Off);
